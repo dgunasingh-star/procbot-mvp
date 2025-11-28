@@ -1,0 +1,55 @@
+# Project State Management Configuration
+
+state_storage:
+  type: "json"  # Using JSON files for simplicity in MVP
+  directory: "project_states"
+  
+# Procurement stages definition
+stages:
+  business_case:
+    name: "Business Case & Requirements"
+    description: "Gather requirements and develop business case"
+    agent: "business_requirements"
+    next_stages: ["market_research"]
+    
+  market_research:
+    name: "Market Research"
+    description: "Conduct independent market analysis"
+    agent: "market_research"
+    previous_stages: ["business_case"]
+    next_stages: ["rfi_rfp"]
+    
+  rfi_rfp:
+    name: "RFI/RFP Development"
+    description: "Create and distribute RFI/RFP documents"
+    agent: "rfi_rfp"
+    previous_stages: ["market_research"]
+    next_stages: ["evaluation"]
+    
+  evaluation:
+    name: "Vendor Evaluation"
+    description: "Evaluate proposals and rank vendors"
+    agent: "evaluation"
+    previous_stages: ["rfi_rfp"]
+    next_stages: ["summary"]
+    
+  summary:
+    name: "Executive Summary"
+    description: "Create executive summary and final recommendation"
+    agent: "summary"
+    previous_stages: ["evaluation"]
+    next_stages: []
+
+# What information to track in project state
+project_fields:
+  - project_id
+  - project_name
+  - created_at
+  - updated_at
+  - current_stage
+  - status  # active, completed, on_hold
+  - context  # Dictionary of key project information
+  - conversation_history
+  - stage_outputs  # Outputs from each stage
+  - decisions  # Key decisions made
+  - next_actions  # What needs to happen next

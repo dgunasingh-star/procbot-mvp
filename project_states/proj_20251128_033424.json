@@ -1,0 +1,17 @@
+{
+  "project_id": "proj_20251128_033424",
+  "project_name": "Cloud Storage Procurement",
+  "created_at": "2025-11-28T03:34:24.542448",
+  "updated_at": "2025-11-28T03:34:24.542453",
+  "current_stage": "business_case",
+  "status": "active",
+  "context": {
+    "company": "TechCorp",
+    "department": "IT",
+    "budget": 100000
+  },
+  "conversation_history": [],
+  "stage_outputs": {},
+  "decisions": [],
+  "next_actions": []
+}
