@@ -1,0 +1,26 @@
+{
+  "project_id": "proj_20251129_002036",
+  "project_name": "company needs a strategic workfloce planning software",
+  "created_at": "2025-11-29T00:20:36.208845",
+  "updated_at": "2025-11-29T00:21:10.057109",
+  "current_stage": "business_case",
+  "status": "active",
+  "context": {},
+  "conversation_history": [
+    {
+      "timestamp": "2025-11-29T00:21:00.973605",
+      "role": "user",
+      "message": "show me all the projects",
+      "agent": null
+    },
+    {
+      "timestamp": "2025-11-29T00:21:10.057096",
+      "role": "agent",
+      "message": "",
+      "agent": "coordinator"
+    }
+  ],
+  "stage_outputs": {},
+  "decisions": [],
+  "next_actions": []
+}
