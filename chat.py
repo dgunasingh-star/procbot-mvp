@@ -1,19 +1,19 @@
 """
-Natural Language Chat with Tool Use
-Agents intelligently call tools based on conversation
+PROCBOT Chat with Multi-Agent Team and Full Workflow Management
 """
 
-from agents.coordinator_agent import create_coordinator_agent
+from utils.agent_team import ProcurementAgentTeam
 from utils.project_tools import ProjectTools
 from agno.tools import tool
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Create global project tools instance
+# Create global instances
 project_tools = ProjectTools()
+agent_team = ProcurementAgentTeam()
 
-# Define tools that agents can use
+# Project management tools
 @tool
 def list_all_projects() -> str:
     """List all procurement projects in the system."""
@@ -55,8 +55,98 @@ def add_context(key: str, value: str) -> str:
     """
     return project_tools.add_project_context(key, value)
 
-def create_tool_enabled_coordinator():
-    """Create coordinator with project management tools"""
+@tool
+def manage_project_workflow(action: str, reason: str = "", target_stage: str = "") -> str:
+    """
+    Comprehensive project lifecycle management.
+    
+    Actions supported:
+    - cancel: Permanently mark project as cancelled (requires reason)
+    - pause: Temporarily put project on hold (requires reason)
+    - resume: Reactivate a paused project
+    - complete: Mark project as successfully finished
+    - advance: Move to next procurement stage
+    - revert: Go back to previous stage
+    - jump_to: Go to a specific stage (requires target_stage)
+    
+    Args:
+        action: The workflow action to perform
+        reason: Explanation for the action (required for cancel/pause)
+        target_stage: Target stage for 'jump_to' action (business_case, market_research, rfi_rfp, evaluation, summary)
+    """
+    return project_tools.manage_workflow(action, reason, target_stage)
+
+# Specialist agent tools
+@tool
+def consult_business_requirements_specialist(query: str) -> str:
+    """
+    Consult the Business Requirements Analyst for help with:
+    - Gathering and documenting requirements
+    - Creating business cases
+    - Defining success criteria and KPIs
+    - ROI analysis
+    
+    Args:
+        query: The question or task for the specialist
+    """
+    return agent_team.consult_business_requirements_specialist(query)
+
+@tool
+def consult_market_research_specialist(query: str) -> str:
+    """
+    Consult the Market Research Analyst for help with:
+    - Analyzing market trends and solutions
+    - Identifying and comparing vendors
+    - Market pricing and cost structures
+    - Industry best practices
+    
+    Args:
+        query: The question or task for the specialist
+    """
+    return agent_team.consult_market_research_specialist(query)
+
+@tool
+def consult_rfi_rfp_specialist(query: str) -> str:
+    """
+    Consult the RFI/RFP Specialist for help with:
+    - Creating RFI/RFP documents
+    - Defining evaluation criteria
+    - Managing vendor communications
+    
+    Args:
+        query: The question or task for the specialist
+    """
+    return agent_team.consult_rfi_rfp_specialist(query)
+
+@tool
+def consult_evaluation_specialist(query: str) -> str:
+    """
+    Consult the Vendor Evaluation Specialist for help with:
+    - Creating evaluation frameworks
+    - Analyzing proposals
+    - Cost-benefit analysis
+    - Risk assessment
+    
+    Args:
+        query: The question or task for the specialist
+    """
+    return agent_team.consult_evaluation_specialist(query)
+
+@tool
+def consult_summary_specialist(query: str) -> str:
+    """
+    Consult the Executive Summary Writer for help with:
+    - Creating executive summaries
+    - Synthesizing information for executives
+    - Writing recommendations
+    
+    Args:
+        query: The question or task for the specialist
+    """
+    return agent_team.consult_summary_specialist(query)
+
+def create_full_coordinator():
+    """Create coordinator with ALL capabilities"""
     from agno.agent import Agent
     from agno.models.anthropic import Claude
     from utils.config_loader import load_agent_config
@@ -67,52 +157,79 @@ def create_tool_enabled_coordinator():
         name=config['name'],
         role=config['role'],
         model=Claude(id=config['model_id']),
-        description=config['description'],
+        description=config['description'] + """
+        
+        You manage procurement projects AND coordinate specialist consultants:
+        
+        PROJECT MANAGEMENT:
+        - Track and manage projects
+        - Handle project lifecycle (cancel, pause, resume, complete)
+        - Manage stage transitions
+        
+        SPECIALIST TEAM:
+        - Business Requirements Analyst
+        - Market Research Analyst
+        - RFI/RFP Specialist
+        - Vendor Evaluation Specialist
+        - Executive Summary Writer
+        
+        Use tools to take action, consult specialists for expertise.
+        """,
         instructions=config['instructions'] + [
-            "You have access to project management tools",
-            "Use list_all_projects when users ask about their projects",
-            "Use create_new_project when starting new procurement",
-            "Use load_project to load an existing project by ID",
-            "Use get_project_status when users ask about status",
-            "Use add_context to save important details about the project"
+            "You have comprehensive project management capabilities",
+            "Use manage_project_workflow to cancel, pause, resume, complete projects",
+            "Use manage_project_workflow to advance, revert, or jump between stages",
+            "Consult specialists when expertise is needed",
+            "For general guidance, answer directly"
         ],
-        tools=[list_all_projects, create_new_project, load_project, get_project_status, add_context],
+        tools=[
+            list_all_projects, 
+            create_new_project, 
+            load_project, 
+            get_project_status, 
+            add_context,
+            manage_project_workflow,  # NEW WORKFLOW TOOL!
+            consult_business_requirements_specialist,
+            consult_market_research_specialist,
+            consult_rfi_rfp_specialist,
+            consult_evaluation_specialist,
+            consult_summary_specialist
+        ],
         markdown=config['settings']['markdown']
     )
     
     return agent
 
-class ToolEnabledChat:
-    """Chat interface with intelligent tool use"""
+class ProcbotChat:
+    """Complete PROCBOT chat"""
     
     def __init__(self):
-        self.coordinator = create_tool_enabled_coordinator()
+        self.coordinator = create_full_coordinator()
         self.project_tools = project_tools
     
     def display_welcome(self):
         """Display welcome message"""
         print("\n" + "=" * 70)
-        print("  PROCBOT - Your Intelligent Procurement Assistant")
+        print("  PROCBOT - AI-Powered Procurement Assistant")
         print("=" * 70)
-        print("\nHello! I'm your procurement coordinator with full project management.")
-        print("\nI can help you with:")
-        print("  • Starting and tracking procurement projects")
-        print("  • Gathering requirements and building business cases")
-        print("  • Market research and vendor analysis")
-        print("  • Creating RFI/RFP documents")
-        print("  • Evaluating proposals")
-        print("  • Executive summaries")
-        print("\nJust talk naturally - I understand what you need!")
-        print("\nType 'exit', 'quit', or 'bye' to end our chat.")
+        print("\nHello! I coordinate a team of procurement specialists and manage")
+        print("your project lifecycle.")
+        print("\nI can help you:")
+        print("  • Create and track procurement projects")
+        print("  • Consult specialist agents for expert advice")
+        print("  • Manage project workflow (cancel, pause, resume, complete)")
+        print("  • Guide you through procurement stages")
+        print("\nJust talk naturally - I'll figure out what you need.")
+        print("\nType 'exit', 'quit', or 'bye' to end.")
         print("=" * 70)
     
     def chat(self, user_message: str):
         """Have a conversation"""
         
-        # Save user message if we have a project
+        # Save user message
         self.project_tools.save_conversation('user', user_message)
         
-        # Build context if we have a current project
+        # Build context
         current_project = self.project_tools.get_current_project()
         enriched_prompt = user_message
         
@@ -120,6 +237,7 @@ class ToolEnabledChat:
             context_info = f"\n\n[Current Project Context]"
             context_info += f"\nProject: {current_project['project_name']}"
             context_info += f"\nStage: {current_project['current_stage']}"
+            context_info += f"\nStatus: {current_project['status']}"
             
             if current_project['context']:
                 context_info += "\nKnown Details:"
@@ -128,14 +246,12 @@ class ToolEnabledChat:
             
             enriched_prompt = f"{user_message}{context_info}"
         
-        # Get response (non-streaming for tool compatibility)
+        # Get response
         print("\n🤖 PROCBOT: ", end="", flush=True)
         
         try:
-            # Use non-streaming for better tool response handling
             response = self.coordinator.run(enriched_prompt)
             
-            # Extract and print the response
             if hasattr(response, 'content'):
                 full_response = response.content
                 print(full_response)
@@ -149,7 +265,7 @@ class ToolEnabledChat:
             self.project_tools.save_conversation('agent', full_response, 'coordinator')
             
         except Exception as e:
-            print(f"\nError getting response: {e}")
+            print(f"\nError: {e}")
             import traceback
             traceback.print_exc()
     
@@ -162,7 +278,12 @@ class ToolEnabledChat:
                 current_project = self.project_tools.get_current_project()
                 if current_project:
                     project_name = current_project['project_name']
-                    indicator = f"[{project_name[:30]}] " if len(project_name) <= 30 else f"[{project_name[:27]}...] "
+                    status = current_project['status']
+                    
+                    # Show status indicator
+                    status_emoji = "🟢" if status == 'active' else "⏸️" if status == 'on_hold' else "🔴" if status == 'cancelled' else "✅"
+                    
+                    indicator = f"[{status_emoji} {project_name[:25]}] " if len(project_name) <= 25 else f"[{status_emoji} {project_name[:22]}...] "
                 else:
                     indicator = ""
                 
@@ -186,5 +307,5 @@ class ToolEnabledChat:
                 traceback.print_exc()
 
 if __name__ == "__main__":
-    chat = ToolEnabledChat()
+    chat = ProcbotChat()
     chat.run()
